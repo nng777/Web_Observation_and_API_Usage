@@ -72,7 +72,7 @@ class IndonesianCityAPI:
 
 class Web_Scraping:
     @staticmethod
-    def scrape_weather_data(cities, csv_path="weather.csv"):
+    def scrape_weather_data(cities, csv_path="cuaca.csv"):
         """Fetch weather data for given cities from wttr.in and save to CSV.
 
         Parameters
@@ -121,7 +121,7 @@ class Web_Scraping:
         return data
 
     @staticmethod
-    def analyze_weather_data(csv_path="weather.csv"):
+    def analyze_weather_data(csv_path="cuaca.csv"):
         """Read weather CSV and print basic statistics."""
         rows = []
         try:
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     print("=========================Complete===========================")
     Web_Scraping.scrape_weather_data(
         ["Jakarta", "Surabaya", "Bandung", "Medan", "Yogyakarta"],
-        csv_path="weather.csv",
+        csv_path="cuaca.csv",
     )
-    Web_Scraping.analyze_weather_data("weather.csv")
+    Web_Scraping.analyze_weather_data("cuaca.csv")
     print("=========================Complete===========================")
