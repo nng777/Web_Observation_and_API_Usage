@@ -1,5 +1,7 @@
 import requests
 import csv
+import argparse
+import os
 
 
 class HTTP_Request:
@@ -82,6 +84,17 @@ class Web_Scraping:
             Destination CSV file path.
         """
 
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "--data-dir",
+            default="data", #Directory Folder
+        )
+        args, _ = parser.parse_known_args()
+        data_dir = args.data_dir
+        file_name = "cuaca.csv" #File Name
+        os.makedirs(data_dir, exist_ok=True)
+        csv_path = os.path.join(data_dir, file_name)
         headers = {"User-Agent": "Mozilla/5.0 (compatible; WeatherScraper/1.0)"}
         data = []
 
