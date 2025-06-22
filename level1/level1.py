@@ -120,6 +120,43 @@ class Web_Scraping:
 
         return data
 
+    @staticmethod
+    def analyze_weather_data(csv_path="weather.csv"):
+        """Read weather CSV and print basic statistics."""
+        rows = []
+        try:
+            with open(csv_path, newline="", encoding="utf-8") as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    try:
+                        row["temperature"] = float(row["temperature"])
+                        rows.append(row)
+                    except (KeyError, ValueError):
+                        pass
+        except FileNotFoundError:
+            print(f"CSV file not found: {csv_path}")
+            return None
+
+        if not rows:
+            print("No valid weather data to analyze")
+            return None
+
+        temps = [r["temperature"] for r in rows]
+        highest = max(rows, key=lambda r: r["temperature"])
+        lowest = min(rows, key=lambda r: r["temperature"])
+        average = sum(temps) / len(temps)
+
+        print("Weather summary:")
+        print(f"Highest temperature: {highest['city']} {highest['temperature']}C")
+        print(f"Lowest temperature: {lowest['city']} {lowest['temperature']}C")
+        print(f"Average temperature: {average:.2f}C")
+
+        return {
+            "highest": highest,
+            "lowest": lowest,
+            "average": average,
+        }
+
 if __name__ == "__main__":
     HTTP_Request().get_indonesian_provinces()
     print("=========================Complete===========================")
@@ -130,4 +167,5 @@ if __name__ == "__main__":
         ["Jakarta", "Surabaya", "Bandung", "Medan", "Yogyakarta"],
         csv_path="weather.csv",
     )
+    Web_Scraping.analyze_weather_data("weather.csv")
     print("=========================Complete===========================")
