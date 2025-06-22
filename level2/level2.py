@@ -1,80 +1,134 @@
 import requests
-import json
 import time
-import os
-from bs4 import BeautifulSoup
-import re
+import json
+import csv
+
 
 class IndonesianDataCollector:
-    def __init__(self, max_retries=3, backoff=1):
-        self.max_retries = max_retries
-        self.backoff = backoff
-
-    def safe_get(self, url, headers=None, expect_json=False):
-        delay = self.backoff
-        for attempt in range(self.max_retries):
+    def safe_api_call(self, url, max_retries=3, backoff=1):
+        """Perform HTTP GET with exponential backoff."""
+        delay = backoff
+        for attempt in range(max_retries):
             try:
-                response = requests.get(url, headers=headers, timeout=20)
+                response = requests.get(url, timeout=10)
                 response.raise_for_status()
-                return response.json() if expect_json else response.text
-            except Exception as e:
-                print(f"[{url}] Attempt {attempt+1} failed: {e}")
+                return response
+            except Exception:
+                if attempt == max_retries - 1:
+                    break
                 time.sleep(delay)
                 delay *= 2
-        print(f"❌ Failed to fetch {url} after {self.max_retries} attempts")
         return None
 
-    def get_exchange_rate(self):
-        print("Fetching exchange rate...")
-        url = "https://api.exchangerate.host/latest?base=USD&symbols=IDR"
-        data = self.safe_get(url, expect_json=True)
-        if data and "rates" in data and "IDR" in data["rates"]:
-            return {"Exchange Rate (IDR/USD)": data["rates"]["IDR"]}
-        print("Exchange rate fetch error. Raw data:", data)
-        return {}
+    def _extract_number_after(self, text, label):
+        """Find numeric value appearing after a label."""
+        idx = text.find(label)
+        if idx == -1:
+            return None
+        idx += len(label)
+        value_chars = []
+        while idx < len(text):
+            ch = text[idx]
+            if ch.isdigit() or ch in '.-':
+                value_chars.append(ch)
+            elif value_chars:
+                break
+            idx += 1
+        try:
+            return float(''.join(value_chars)) if value_chars else None
+        except ValueError:
+            return None
 
-    def get_inflation_and_gdp(self):
-        print("Fetching inflation and GDP...")
-        url = "https://tradingeconomics.com/indonesia"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        html = self.safe_get(url, headers=headers)
-        result = {}
+    def get_regional_data(self):
+        """Fetch provinces and their cities."""
+        provinces_url = "https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json"
+        resp = self.safe_api_call(provinces_url)
+        if not resp:
+            return []
+        provinces = resp.json()
+        regions = []
+        for prov in provinces:
+            pid = prov.get("id")
+            cities_url = f"https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{pid}.json"
+            c_resp = self.safe_api_call(cities_url)
+            cities = c_resp.json() if c_resp else []
+            regions.append({
+                "province": prov.get("name"),
+                "cities": [c.get("name") for c in cities],
+            })
+        return regions
 
-        if html:
-            soup = BeautifulSoup(html, "html.parser")
-            text = soup.get_text()
+    def get_economic_indicators(self):
+        """Collect GDP growth, inflation, and exchange rate."""
+        data = {}
 
-            # Try flexible inflation regex
-            inflation_match = re.search(r"Inflation Rate[^0-9]*([\d.]+)", text, re.IGNORECASE)
-            if inflation_match:
-                result["Inflation Rate (YoY %)"] = float(inflation_match.group(1))
-            else:
-                print("Inflation not found")
+        # Exchange rate (official rate, IDR per USD) from World Bank API
+        rate_url = (
+            "https://api.worldbank.org/v2/country/IDN/indicator/"
+            "PA.NUS.FCRF?format=json"
+        )
+        rate_resp = self.safe_api_call(rate_url)
+        if rate_resp:
+            try:
+                rate_data = rate_resp.json()[1]
+                latest = next(i for i in rate_data if i.get("value") is not None)
+                data["exchange_rate_idr_usd"] = float(latest["value"])
+            except Exception:
+                pass
 
-            # Try flexible GDP growth regex
-            gdp_match = re.search(r"GDP Growth Rate[^0-9]*([\d.]+)", text, re.IGNORECASE)
-            if gdp_match:
-                result["GDP Growth (annual %)"] = float(gdp_match.group(1))
-            else:
-                print("GDP Growth not found")
+        # GDP growth (annual %) from World Bank API
+        gdp_url = (
+            "https://api.worldbank.org/v2/country/IDN/indicator/"
+            "NY.GDP.MKTP.KD.ZG?format=json"
+        )
+        gdp_resp = self.safe_api_call(gdp_url)
+        if gdp_resp:
+            try:
+                gdp_data = gdp_resp.json()[1]
+                latest = next(i for i in gdp_data if i.get("value") is not None)
+                data["gdp_growth_percent"] = float(latest["value"])
+            except Exception:
+                pass
 
-        return result
+        # Inflation rate (consumer prices, annual %) from World Bank API
+        infl_url = (
+            "https://api.worldbank.org/v2/country/IDN/indicator/"
+            "FP.CPI.TOTL.ZG?format=json"
+        )
+        infl_resp = self.safe_api_call(infl_url)
+        if infl_resp:
+            try:
+                infl_data = infl_resp.json()[1]
+                latest = next(i for i in infl_data if i.get("value") is not None)
+                data["inflation_yoy_percent"] = float(latest["value"])
+            except Exception:
+                pass
 
-    def integrate_all(self):
-        exchange_data = self.get_exchange_rate()
-        economic_data = self.get_inflation_and_gdp()
+        return data
 
-        all_data = {}
-        all_data.update(exchange_data)
-        all_data.update(economic_data)
+    def integrate_all_data(self, json_path = "reports/indonesia_data.json", csv_path = "data/economic_data.csv"):
+        """Combine regional and economic data and save to files."""
+        regional = self.get_regional_data()
+        economic = self.get_economic_indicators()
+        combined = {"regions": regional, **economic}
 
-        os.makedirs("output", exist_ok=True)
-        with open("output/combined_data.json", "w") as f:
-            json.dump(all_data, f, indent=2)
+        json_path = "reports/indonesia_data.json"
+        csv_path = "data/economic_data.csv"
 
-        print("✅ Data saved to output/combined_data.json")
+        with open(json_path, "w") as jf:
+            json.dump(combined, jf, indent=2)
+
+        with open(csv_path, "w", newline="") as cf:
+            writer = csv.DictWriter(cf, fieldnames=[
+                "exchange_rate_idr_usd",
+                "gdp_growth_percent",
+                "inflation_yoy_percent",
+            ])
+            writer.writeheader()
+            writer.writerow(economic)
+        return combined
 
 
 if __name__ == "__main__":
     collector = IndonesianDataCollector()
-    collector.integrate_all()
+    collector.integrate_all_data()
