@@ -2,12 +2,38 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 class IndonesianEcommerceScraper:
     def __init__(self):
         self.base_url = "https://www.tokopedia.com/p/"
         self.headers = {"User-Agent": "Mozilla/5.0"}
         self.products = []
+        self.driver = None
+
+    def _get_driver(self):
+        """Initialise Selenium Chrome driver in headless mode."""
+        if self.driver:
+            return self.driver
+
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        self.driver = webdriver.Chrome(
+            ChromeDriverManager().install(), options=options
+        )
+        return self.driver
+
+    def close(self):
+        if self.driver:
+            self.driver.quit()
 
     def scrape_products(self, category, max_pages=3):
         """Scrape products: name, price, rating, seller, location"""
@@ -23,30 +49,44 @@ class IndonesianEcommerceScraper:
             return
 
         cat_slug = category_map[category]
+        driver = self._get_driver()
         for page in range(1, max_pages + 1):
             url = f"{self.base_url}{cat_slug}?page={page}"
             print(f"Scraping: {url}")
-            response = requests.get(url, headers=self.headers)
-            if response.status_code != 200:
-                print(f"Failed to fetch page {page}")
+            driver.get(url)
+
+            try:
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, "div[data-testid='linkProductWrapper']")
+                    )
+                )
+            except Exception:
+                print(f"No products found on page {page}")
                 continue
 
-            soup = BeautifulSoup(response.text, "html.parser")
-            product_cards = soup.select('div.css-1asz3by')  # You may need to inspect this on the live site
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            product_cards = soup.select("div[data-testid='linkProductWrapper']")
 
             for card in product_cards:
-                name = card.select_one("div.css-1f4mp12").get_text(strip=True) if card.select_one("div.css-1f4mp12") else "-"
-                price = card.select_one("div.css-o5uqvq").get_text(strip=True) if card.select_one("div.css-o5uqvq") else "-"
-                location = card.select_one("div.css-1kdc32b").get_text(strip=True) if card.select_one("div.css-1kdc32b") else "-"
-                self.products.append({
-                    "name": name,
-                    "price": price,
-                    "rating": "-",  # Static HTML doesn't expose rating easily
-                    "reviews_count": "-",
-                    "category": category,
-                    "seller_location": location
-                })
+                name_el = card.select_one("span[data-testid='spnSRPProdName']")
+                price_el = card.select_one("span[data-testid='spnSRPProdPrice']")
+                loc_el = card.select_one("span[data-testid='spnSRPShopLoc']")
 
+                name = name_el.get_text(strip=True) if name_el else "-"
+                price = price_el.get_text(strip=True) if price_el else "-"
+                location = loc_el.get_text(strip=True) if loc_el else "-"
+
+                self.products.append(
+                    {
+                        "name": name,
+                        "price": price,
+                        "rating": "-",  # rating not easily available
+                        "reviews_count": "-",
+                        "category": category,
+                        "seller_location": location,
+                    }
+                )
             time.sleep(2)  # Be polite
 
     def analyze_products(self):
@@ -75,3 +115,4 @@ if __name__ == "__main__":
     scraper.scrape_products("elektronik", max_pages=2)
     scraper.scrape_products("fashion", max_pages=2)
     df = scraper.analyze_products()
+    scraper.close()
