@@ -11,7 +11,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 class IndonesianEcommerceScraper:
     def __init__(self):
         self.base_url = "https://www.tokopedia.com/p/"
-        self.headers = {"User-Agent": "Mozilla/5.0"}
         self.products = []
         self.driver = None
 
@@ -86,6 +85,7 @@ class IndonesianEcommerceScraper:
                         "seller_location": location,
                     }
                 )
+
             time.sleep(2)  # Be polite
 
     def analyze_products(self):
