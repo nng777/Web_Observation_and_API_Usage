@@ -2,6 +2,7 @@ import requests
 import csv
 from bs4 import BeautifulSoup
 
+
 class HTTP_Request:
     @staticmethod
     def get_indonesian_provinces():
@@ -24,12 +25,11 @@ class HTTP_Request:
             print(f"Error occurred during request: {e}")
         pass
 
+
 class IndonesianCityAPI:
     def __init__(self):
         self.base_url = "https://www.emsifa.com/api-wilayah-indonesia/api"
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; CityAPI/1.0)"
-        }
+        self.headers = {"User-Agent": "Mozilla/5.0 (compatible; CityAPI/1.0)"}
 
     def get_cities_by_province_id(self, province_id):
         """Get cities from a specific province ID"""
@@ -48,7 +48,9 @@ class IndonesianCityAPI:
         """Search city by name across all provinces (case-insensitive)"""
         provinces_url = f"{self.base_url}/provinces.json"
         try:
-            provinces = requests.get(provinces_url, headers=self.headers).json()
+            provinces = requests.get(
+                provinces_url, headers=self.headers
+            ).json()
             all_cities = []
             for province in provinces:
                 province_id = province["id"]
@@ -56,7 +58,8 @@ class IndonesianCityAPI:
                 all_cities.extend(cities)
 
             matched = [
-                city for city in all_cities
+                city
+                for city in all_cities
                 if city_name.lower() in city["name"].lower()
             ]
 
@@ -68,6 +71,7 @@ class IndonesianCityAPI:
         except Exception as e:
             print(f"Error during search: {e}")
             return []
+
 
 class Web_Scraping:
     @staticmethod
@@ -83,29 +87,56 @@ class Web_Scraping:
         """
 
         csv_path = "data/cuaca.csv"
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; WeatherScraper/1.0)"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; WeatherScraper/1.0)"
+        }
         data = []
 
         for city in cities:
-            url = f"https://wttr.in/{city}?format=j1"
+            slug = city.lower().replace(" ", "-")
+            url = f"https://weather.com/weather/today/l/{slug}"
             try:
                 resp = requests.get(url, headers=headers)
                 resp.raise_for_status()
-                weather = resp.json()
 
-                current = weather.get("current_condition", [{}])[0]
-                temperature = current.get("temp_C", "N/A")
-                condition = current.get("weatherDesc", [{"value": ""}])[0]["value"]
-                humidity = current.get("humidity", "N/A")
+                soup = BeautifulSoup(resp.text, "html.parser")
 
-                print(f"Fetched weather for {city}: {temperature}C, {condition}")
+                temp_tag = soup.find(
+                    "span", {"data-testid": "TemperatureValue"}
+                )
+                cond_tag = soup.find("div", {"data-testid": "wxPhrase"})
+                humid_tag = soup.find(
+                    "span", {"data-testid": "PercentageValue"}
+                )
 
-                data.append({
-                    "city": city,
-                    "temperature": temperature,
-                    "condition": condition,
-                    "humidity": humidity,
-                })
+                temperature = (
+                    temp_tag.get_text(strip=True)
+                    .replace("°", "")
+                    .replace("C", "")
+                    if temp_tag
+                    else "N/A"
+                )
+                condition = (
+                    cond_tag.get_text(strip=True) if cond_tag else "N/A"
+                )
+                humidity = (
+                    humid_tag.get_text(strip=True).replace("%", "")
+                    if humid_tag
+                    else "N/A"
+                )
+
+                print(
+                    f"Fetched weather for {city}: {temperature}C, {condition}"
+                )
+
+                data.append(
+                    {
+                        "city": city,
+                        "temperature": temperature,
+                        "condition": condition,
+                        "humidity": humidity,
+                    }
+                )
             except Exception as exc:
                 print(f"Failed to fetch weather for {city}: {exc}")
 
@@ -113,7 +144,12 @@ class Web_Scraping:
             with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.DictWriter(
                     csvfile,
-                    fieldnames=["city", "temperature", "condition", "humidity"],
+                    fieldnames=[
+                        "city",
+                        "temperature",
+                        "condition",
+                        "humidity",
+                    ],
                 )
                 writer.writeheader()
                 writer.writerows(data)
