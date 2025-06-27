@@ -17,21 +17,51 @@ class IndonesianEcommerceScraper:
         """Placeholder for compatibility with earlier versions."""
         pass
 
+    def _find_state_json(self, text: str) -> str | None:
+        """Return the JSON string following ``window.__STATE__=``.
+
+        The HTML contains a large JavaScript assignment like::
+
+            <script>window.__STATE__ = { ... };</script>
+
+        Because the JSON blob may contain nested braces, regular expressions
+        are unreliable.  This helper scans character by character to find the
+        matching closing brace.
+        """
+        token = "window.__STATE__"
+        idx = text.find(token)
+        if idx == -1:
+            return None
+
+        # Find the first opening brace after the token
+        start = text.find("{", idx)
+        if start == -1:
+            return None
+
+        depth = 0
+        for pos in range(start, len(text)):
+            ch = text[pos]
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start : pos + 1]
+        return None
+
     def _extract_products(self, html: str) -> List[Dict[str, Any]]:
         """Extract product dictionaries from the embedded JSON state."""
         soup = BeautifulSoup(html, "html.parser")
-        script = soup.find("script", string=re.compile("window.__STATE__"))
-        if script:
-            text = script.get_text()
-        else:
-            text = html
+        # Try to locate a script containing the state assignment
+        script = soup.find("script", string=re.compile("__STATE__"))
+        text = script.get_text() if script else html
 
-        match = re.search(r"window\.__STATE__\s*=\s*(\{.*?\});", text, re.DOTALL)
-        if not match:
+        json_text = self._find_state_json(text)
+        if not json_text:
             return []
 
         try:
-            state = json.loads(match.group(1))
+            state = json.loads(json_text)
         except json.JSONDecodeError:
             return []
 
