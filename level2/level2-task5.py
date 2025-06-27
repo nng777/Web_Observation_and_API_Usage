@@ -1,37 +1,56 @@
+import json
+import re
+import time
+from typing import Any, Dict, List
+
 from bs4 import BeautifulSoup
 import pandas as pd
-import time
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+import requests
 
 class IndonesianEcommerceScraper:
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_url = "https://www.tokopedia.com/p/"
-        self.products = []
-        self.driver = None
+        self.headers = {"User-Agent": "Mozilla/5.0"}
+        self.products: List[Dict[str, Any]] = []
 
-    def _get_driver(self):
-        """Initialise Selenium Chrome driver in headless mode."""
-        if self.driver:
-            return self.driver
+    def close(self) -> None:
+        """Placeholder for compatibility with earlier versions."""
+        pass
 
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+    def _extract_products(self, html: str) -> List[Dict[str, Any]]:
+        """Extract product dictionaries from the embedded JSON state."""
+        soup = BeautifulSoup(html, "html.parser")
+        script = soup.find("script", string=re.compile("window.__STATE__"))
+        if script:
+            text = script.get_text()
+        else:
+            text = html
 
-        self.driver = webdriver.Chrome(
-            ChromeDriverManager().install(), options=options
-        )
-        return self.driver
+        match = re.search(r"window\.__STATE__\s*=\s*(\{.*?\});", text, re.DOTALL)
+        if not match:
+            return []
 
-    def close(self):
-        if self.driver:
-            self.driver.quit()
+        try:
+            state = json.loads(match.group(1))
+        except json.JSONDecodeError:
+            return []
+
+        products: List[Dict[str, Any]] = []
+
+        def _recurse(value: Any) -> None:
+            if isinstance(value, dict):
+                if value.get("__typename") == "Product" or (
+                    "name" in value and "price" in value
+                ):
+                    products.append(value)
+                for v in value.values():
+                    _recurse(v)
+            elif isinstance(value, list):
+                for item in value:
+                    _recurse(item)
+
+        _recurse(state)
+        return products
 
     def scrape_products(self, category, max_pages=3):
         """Scrape products: name, price, rating, seller, location"""
@@ -47,46 +66,32 @@ class IndonesianEcommerceScraper:
             return
 
         cat_slug = category_map[category]
-        driver = self._get_driver()
         for page in range(1, max_pages + 1):
             url = f"{self.base_url}{cat_slug}?page={page}"
             print(f"Scraping: {url}")
-            driver.get(url)
+            resp = requests.get(url, headers=self.headers, timeout=15)
+            if resp.status_code != 200:
+                print(f"Failed to fetch page {page}")
+                continue
 
-            try:
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_all_elements_located(
-                        (By.CSS_SELECTOR, "div[data-testid='linkProductWrapper']")
-                    )
-                )
-            except Exception:
+            products = self._extract_products(resp.text)
+            if not products:
                 print(f"No products found on page {page}")
                 continue
 
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-            product_cards = soup.select("div[data-testid='linkProductWrapper']")
-
-            for card in product_cards:
-                name_el = card.select_one("span[data-testid='spnSRPProdName']")
-                price_el = card.select_one("span[data-testid='spnSRPProdPrice']")
-                loc_el = card.select_one("span[data-testid='spnSRPShopLoc']")
-
-                name = name_el.get_text(strip=True) if name_el else "-"
-                price = price_el.get_text(strip=True) if price_el else "-"
-                location = loc_el.get_text(strip=True) if loc_el else "-"
-
+            for item in products:
                 self.products.append(
                     {
-                        "name": name,
-                        "price": price,
-                        "rating": "-",  # rating not easily available
-                        "reviews_count": "-",
+                        "name": item.get("name", "-"),
+                        "price": str(item.get("price", "-")),
+                        "rating": item.get("ratingAverage", "-"),
+                        "reviews_count": item.get("countReview", "-"),
                         "category": category,
-                        "seller_location": location,
+                        "seller_location": item.get("shopCity", "-"),
                     }
                 )
 
-            time.sleep(2)  # Be polite
+            time.sleep(1)  # Be polite
 
     def analyze_products(self):
         df = pd.DataFrame(self.products)
