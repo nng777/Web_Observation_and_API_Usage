@@ -1,15 +1,13 @@
 import requests
-import csv
 from bs4 import BeautifulSoup
+import re
+import csv
 
 
 class HTTP_Request:
     @staticmethod
     def get_indonesian_provinces():
-        """Get provinces from: https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json"""
         url = "https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json"
-        # TODO: Implement HTTP GET request
-        # TODO: Display total provinces and first 5 provinces
         try:
             response = requests.get(url)
             response.raise_for_status()  # Raise error if response code is not 200
@@ -38,7 +36,7 @@ class IndonesianCityAPI:
             response = requests.get(url, headers=self.headers)
             response.raise_for_status()
             cities = response.json()
-            #print(f"Total cities in province {province_id}: {len(cities)}")
+            # print(f"Total cities in province {province_id}: {len(cities)}")
             return cities
         except requests.exceptions.RequestException as e:
             print(f"Failed to retrieve cities: {e}")
@@ -74,8 +72,10 @@ class IndonesianCityAPI:
 
 
 class Web_Scraping:
-    @staticmethod
-    def scrape_weather_data(cities, csv_path="cuaca.csv"):
+    def __init__(self):
+        self.csv_path = "data/cuaca.csv"
+
+    def scrape_weather_data(self, cities):
         """Fetch weather data for given cities from wttr.in and save to CSV.
 
         Parameters
@@ -86,7 +86,7 @@ class Web_Scraping:
             Destination CSV file path.
         """
 
-        csv_path = "data/cuaca.csv"
+        #csv_path = "data/cuaca.csv"
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; WeatherScraper/1.0)"
         }
@@ -94,36 +94,31 @@ class Web_Scraping:
 
         for city in cities:
             slug = city.lower().replace(" ", "-")
-            url = f"https://weather.com/weather/today/l/{slug}"
+            url = f"https://www.timeanddate.com/weather/indonesia/{slug}"
             try:
                 resp = requests.get(url, headers=headers)
                 resp.raise_for_status()
-
                 soup = BeautifulSoup(resp.text, "html.parser")
 
-                temp_tag = soup.find(
-                    "span", {"data-testid": "TemperatureValue"}
-                )
-                cond_tag = soup.find("div", {"data-testid": "wxPhrase"})
-                humid_tag = soup.find(
-                    "span", {"data-testid": "PercentageValue"}
-                )
-
+                qlook = soup.find("div", id="qlook")
+                temp_tag = qlook.find("div", class_="h2") if qlook else None
                 temperature = (
-                    temp_tag.get_text(strip=True)
-                    .replace("°", "")
-                    .replace("C", "")
+                    temp_tag.get_text(strip=True).split()[0]
                     if temp_tag
                     else "N/A"
                 )
+                cond_tag = qlook.find("p") if qlook else None
                 condition = (
                     cond_tag.get_text(strip=True) if cond_tag else "N/A"
                 )
-                humidity = (
-                    humid_tag.get_text(strip=True).replace("%", "")
-                    if humid_tag
-                    else "N/A"
-                )
+                humidity = "N/A"
+                humid_label = soup.find(string=re.compile("Humidity"))
+                if humid_label:
+                    humid_td = humid_label.find_next("td")
+                    if humid_td:
+                        humidity = humid_td.get_text(strip=True).replace(
+                            "%", ""
+                        )
 
                 print(
                     f"Fetched weather for {city}: {temperature}C, {condition}"
@@ -139,9 +134,8 @@ class Web_Scraping:
                 )
             except Exception as exc:
                 print(f"Failed to fetch weather for {city}: {exc}")
-
         if data:
-            with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
+            with open(self.csv_path, "w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.DictWriter(
                     csvfile,
                     fieldnames=[
@@ -156,12 +150,11 @@ class Web_Scraping:
 
         return data
 
-    @staticmethod
-    def analyze_weather_data(csv_path="cuaca.csv"):
+    def analyze_weather_data(self):
         """Read weather CSV and print basic statistics."""
         rows = []
         try:
-            with open(csv_path, newline="", encoding="utf-8") as csvfile:
+            with open(self.csv_path, newline="", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     try:
@@ -170,7 +163,7 @@ class Web_Scraping:
                     except (KeyError, ValueError):
                         pass
         except FileNotFoundError:
-            print(f"CSV file not found: {csv_path}")
+            print(f"CSV file not found: {self.csv_path}")
             return None
 
         if not rows:
@@ -183,7 +176,9 @@ class Web_Scraping:
         average = sum(temps) / len(temps)
 
         print("Weather summary:")
-        print(f"Highest temperature: {highest['city']} {highest['temperature']}C")
+        print(
+            f"Highest temperature: {highest['city']} {highest['temperature']}C"
+        )
         print(f"Lowest temperature: {lowest['city']} {lowest['temperature']}C")
         print(f"Average temperature: {average:.2f}C")
 
@@ -193,15 +188,15 @@ class Web_Scraping:
             "average": average,
         }
 
+
 if __name__ == "__main__":
     HTTP_Request().get_indonesian_provinces()
     print("=========================Complete===========================")
     IndonesianCityAPI().get_cities_by_province_id("32")  # Jawa Barat
-    IndonesianCityAPI().search_city_by_name("Bandung")   # Bandung
+    IndonesianCityAPI().search_city_by_name("Bandung")  # Bandung
     print("=========================Complete===========================")
-    Web_Scraping.scrape_weather_data(
-        ["Jakarta", "Surabaya", "Bandung", "Medan", "Yogyakarta"],
-        csv_path="cuaca.csv",
-    )
-    Web_Scraping.analyze_weather_data("cuaca.csv")
+    scraper = Web_Scraping()
+    cities = ["Jakarta", "Surabaya", "Bandung", "Medan", "Yogyakarta"]
+    scraper.scrape_weather_data(cities)
+    scraper.analyze_weather_data()
     print("=========================Complete===========================")
