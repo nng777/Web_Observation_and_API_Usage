@@ -4,7 +4,7 @@ import os
 import logging
 import re
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import Any
 
 try:
     import requests
@@ -26,8 +26,10 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+USER_AGENT = "Mozilla/5.0"
 
-def download_html(url: str, path: str, headers: Dict[str, str] | None = None) -> str | None:
+
+def download_html(url: str, path: str, headers: dict[str, str] | None = None) -> str | None:
     """Fetch ``url`` and save the HTML content to ``path``.
 
     Returns the path to the saved file, or ``None`` on failure.
@@ -56,7 +58,7 @@ def clean_news_text(text: str) -> str:
     return text.strip()
 
 
-def identify_sentiment_keywords(text: str) -> Dict[str, List[str]]:
+def identify_sentiment_keywords(text: str) -> dict[str, list[str]]:
     """Identify predefined positive and negative words in the text."""
 
     positive = [
@@ -154,44 +156,71 @@ def identify_sentiment_keywords(text: str) -> Dict[str, List[str]]:
     }
 
 
+def _parse_kaskus_html(html: str, max_posts: int) -> list[str]:
+    """Extract thread titles from Kaskus search HTML."""
+
+    if not BeautifulSoup:
+        return []
+
+    soup = BeautifulSoup(html, "html.parser")
+    post_texts: list[str] = []
+    selectors = [
+        "a.js-thread-title",
+        "a.thread-title",
+        "div.thread-title a",
+        "a[href*='thread']",
+    ]
+    for sel in selectors:
+        for tag in soup.select(sel):
+            text = tag.get_text(strip=True)
+            if text:
+                post_texts.append(text)
+                if len(post_texts) >= max_posts:
+                    break
+        if len(post_texts) >= max_posts:
+            break
+
+    if not post_texts:
+        for tag in soup.find_all("a"):
+            text = tag.get_text(strip=True)
+            if text:
+                post_texts.append(text)
+            if len(post_texts) >= max_posts:
+                break
+
+    return post_texts[:max_posts]
+
+
 # ---------------------------------------------------------------------------
 # Social Media Sentiment
 # ---------------------------------------------------------------------------
 
-def analyze_social_media_sentiment(keyword: str, max_posts: int = 20) -> Dict[str, Any]:
-    """Search Social Searcher for posts containing ``keyword``.
+def analyze_social_media_sentiment(keyword: str, max_posts: int = 20) -> dict[str, Any]:
+    """Scrape Kaskus for threads containing ``keyword`` and analyse sentiment."""
 
-    Posts are classified as positive or negative by counting keywords.
-    The function returns individual results with detected keywords and an
-    overall sentiment summary.
-    """
-
-    if not requests:
-        logger.warning("Requests not available; cannot fetch social posts")
+    if not requests or not BeautifulSoup:
+        logger.warning(
+            "Requests/BeautifulSoup not available; cannot fetch social posts"
+        )
         return {"posts": [], "summary": {"positive": 0, "negative": 0}}
 
-    api_url = (
-        "https://www.social-searcher.com/api/v2/search"
-        f"?q={requests.utils.quote(keyword)}&lang=id&limit={max_posts}"
-    )
-    api_key = os.getenv("SOCIAL_SEARCHER_KEY")
-    if api_key:
-        api_url += f"&key={api_key}"
+    search_url = f"https://www.kaskus.co.id/search?q={requests.utils.quote(keyword)}"
+    headers = {"User-Agent": USER_AGENT}
+    safe_kw = re.sub(r"\W+", "_", keyword.lower())
+    html_file = f"data/kaskus_{safe_kw}.html"
 
     try:
-        resp = requests.get(api_url, timeout=10)
-        resp.raise_for_status()
+        saved = download_html(search_url, html_file, headers)
+        if not saved:
+            return {"posts": [], "summary": {"positive": 0, "negative": 0}}
+        with open(saved, encoding="utf-8") as fh:
+            html = fh.read()
+        post_texts = _parse_kaskus_html(html, max_posts)
     except Exception as exc:
-        logger.warning("Failed to fetch social posts: %s", exc)
+        logger.warning("Failed to fetch posts from kaskus: %s", exc)
         return {"posts": [], "summary": {"positive": 0, "negative": 0}}
 
-    try:
-        data = resp.json()
-    except Exception as exc:
-        logger.warning("Failed to parse social posts JSON: %s", exc)
-        return {"posts": [], "summary": {"positive": 0, "negative": 0}}
-
-    posts = [p.get("text", "") for p in data.get("posts", [])]
+    posts = post_texts[:max_posts]
     sentiments = {"positive": 0, "negative": 0}
     analysed = []
 
@@ -235,7 +264,7 @@ def fetch_weather(city: str) -> WeatherInfo | None:
 
     slug = city.lower().replace(" ", "-")
     url = f"https://www.timeanddate.com/weather/indonesia/{slug}"
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {"User-Agent": USER_AGENT}
     try:
         html_file = f"data/weather_{slug}.html"
         saved = download_html(url, html_file, headers)
@@ -260,7 +289,7 @@ def fetch_weather(city: str) -> WeatherInfo | None:
         return None
 
 
-def fetch_upcoming_events(limit: int = 5) -> List[str]:
+def fetch_upcoming_events(limit: int = 5) -> list[str]:
     """Scrape a few upcoming events from indonesia.travel."""
 
     if not requests or not BeautifulSoup:
@@ -288,7 +317,7 @@ def search_hotels(
     check_out: str,
     rooms: int = 1,
     guests: int = 2,
-) -> List[str]:
+) -> list[str]:
     """Search the RedDoorz website for hotels and return hotel titles."""
 
     if not requests or not BeautifulSoup:
@@ -300,7 +329,7 @@ def search_hotels(
         f"?country=indonesia&city={city_slug}&check_in_date={check_in}"
         f"&check_out_date={check_out}&rooms={rooms}&guest={guests}&sort_by=popular&order_by=desc"
     )
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {"User-Agent": USER_AGENT}
     try:
         html_file = f"data/hotels_{city_slug}.html"
         saved = download_html(url, html_file, headers)
@@ -322,7 +351,7 @@ def generate_tourism_insights(
     check_out: str,
     rooms: int = 1,
     guests: int = 2,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Collect weather, events and hotel data and return combined dict."""
 
     weather = fetch_weather(city)
@@ -340,8 +369,8 @@ def generate_tourism_insights(
 # ---------------------------------------------------------------------------
 
 def create_pdf_report(
-    tourism_data: Dict[str, Any],
-    sentiment: Dict[str, Any],
+    tourism_data: dict[str, Any],
+    sentiment: dict[str, Any],
     path: str = "reports/bonus_report.pdf",
 ) -> str:
     """Generate a simple PDF report visualising tourism and sentiment data."""
