@@ -7,10 +7,10 @@ import time
 
 
 class IndonesianNewsScraper:
-    """Scrape and analyze Indonesian online news."""
+    #Scrape and analyze Indonesian online news.
 
     def __init__(self):
-        # Mapping of category name to starting URL
+        #Mapping of category name to starting URL
         self.sources = {
             "ekonomi": "https://finance.detik.com",
             "teknologi": "https://inet.detik.com",
@@ -23,7 +23,7 @@ class IndonesianNewsScraper:
         self.articles_per_category = 25
 
     def scrape_news_category(self, category):
-        """Scrape from: politik, ekonomi, teknologi, olahraga, hiburan"""
+        #Scrape from: politik, ekonomi, teknologi, olahraga, hiburan
         url = self.sources.get(category)
         if not url:
             print(f"Unknown category: {category}")
@@ -39,7 +39,7 @@ class IndonesianNewsScraper:
         soup = BeautifulSoup(resp.text, "html.parser")
         articles = []
 
-        # Many Detik pages use <article> tags for listing articles
+        #Many web pages use <article> tags for listing articles
         cards = soup.select("article")
         for card in cards:
             if len(articles) >= self.articles_per_category:
@@ -75,13 +75,13 @@ class IndonesianNewsScraper:
         return articles
 
     def clean_news_text(self, text):
-        """Clean and preprocess text"""
+        #Clean and preprocess text
         text = re.sub(r"\s+", " ", text)
         text = re.sub(r"[^\w\s]", "", text)
         return text.strip()
 
     def identify_sentiment_keywords(self, text):
-        """Find positive/negative keywords for preliminary sentiment"""
+        #Find positive/negative keywords for preliminary sentiment
         positive = [            "akuntabel", "aman", "apresiasi", "baik", "beasiswa", "berhasil", "berkelanjutan",
             "bersih", "cerdas", "canggih", "damai", "demokratis", "setuju", "dukung",
             "efisien", "ekspansi", "hebat", "hijau", "inovatif", "kolaborasi", "kompeten",
@@ -103,7 +103,7 @@ class IndonesianNewsScraper:
         }
 
     def fetch_article_text(self, url):
-        """Retrieve and clean article body text from a URL."""
+        #Retrieve and clean article body text from a URL.
         if not url:
             return ""
         try:
@@ -118,7 +118,7 @@ class IndonesianNewsScraper:
         return self.clean_news_text(content)
 
     def collect_all_news(self):
-        """Scrape all configured categories."""
+        #Scrape all configured categories.
         all_articles = []
         for cat in self.sources:
             articles = self.scrape_news_category(cat)
@@ -128,7 +128,7 @@ class IndonesianNewsScraper:
         return all_articles
 
     def generate_metrics(self, articles):
-        """Summarize article and sentiment counts by category."""
+        #Summarize article and sentiment counts by category.
         metrics = {}
         for cat in self.sources:
             metrics[cat] = {
