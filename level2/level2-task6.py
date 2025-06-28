@@ -7,23 +7,23 @@ import time
 
 
 class IndonesianNewsScraper:
-    #Scrape and analyze Indonesian online news.
+    """Scrape and analyze Indonesian online news."""
 
     def __init__(self):
         # Mapping of category name to starting URL
         self.sources = {
-            "internasional": "https://news.detik.com/internasional",
             "ekonomi": "https://finance.detik.com",
             "teknologi": "https://inet.detik.com",
             "olahraga": "https://sport.detik.com",
             "hiburan": "https://hot.detik.com",
+            "internasional": "https://news.detik.com/internasional",
         }
         self.headers = {"User-Agent": "Mozilla/5.0"}
-        # Grab enough articles
-        self.articles_per_category = 20
+        # Grab enough articles to exceed 100 in total
+        self.articles_per_category = 25
 
     def scrape_news_category(self, category):
-        #Scrape from: internasional, ekonomi, teknologi, olahraga, hiburan
+        """Scrape from: politik, ekonomi, teknologi, olahraga, hiburan"""
         url = self.sources.get(category)
         if not url:
             print(f"Unknown category: {category}")
@@ -32,7 +32,6 @@ class IndonesianNewsScraper:
         try:
             resp = requests.get(url, headers=self.headers, timeout=10)
             resp.raise_for_status()
-        #Error handling
         except Exception as exc:
             print(f"Failed to fetch {category}: {exc}")
             return []
@@ -40,7 +39,7 @@ class IndonesianNewsScraper:
         soup = BeautifulSoup(resp.text, "html.parser")
         articles = []
 
-        # Many web pages use <article> tags for listing articles
+        # Many Detik pages use <article> tags for listing articles
         cards = soup.select("article")
         for card in cards:
             if len(articles) >= self.articles_per_category:
@@ -49,20 +48,26 @@ class IndonesianNewsScraper:
             title_tag = card.find(["h2", "h3"])
             summary_tag = card.find("p")
             date_tag = card.find("time")
+            link_tag = card.find("a", href=True)
 
             title = title_tag.get_text(strip=True) if title_tag else ""
             summary = summary_tag.get_text(strip=True) if summary_tag else ""
             date = date_tag.get_text(strip=True) if date_tag else ""
+            link = link_tag["href"] if link_tag else None
+
+            body_text = self.fetch_article_text(link) if link else ""
 
             info = {
                 "title": self.clean_news_text(title),
                 "summary": self.clean_news_text(summary),
+                "body": body_text,
                 "category": category,
                 "source": url,
                 "date": date,
             }
+            text_for_sentiment = body_text if body_text else info["summary"]
             info["sentiment_keywords"] = self.identify_sentiment_keywords(
-                info["summary"]
+                text_for_sentiment
             )
             articles.append(info)
 
@@ -70,32 +75,26 @@ class IndonesianNewsScraper:
         return articles
 
     def clean_news_text(self, text):
-        #Clean and preprocess text
+        """Clean and preprocess text"""
         text = re.sub(r"\s+", " ", text)
         text = re.sub(r"[^\w\s]", "", text)
         return text.strip()
 
     def identify_sentiment_keywords(self, text):
-        #Find positive/negative keywords for preliminary sentiment
-        positive = [
-            "akuntabel", "aman", "apresiasi", "baik", "beasiswa", "berhasil", "berkelanjutan",
+        """Find positive/negative keywords for preliminary sentiment"""
+        positive = [            "akuntabel", "aman", "apresiasi", "baik", "beasiswa", "berhasil", "berkelanjutan",
             "bersih", "cerdas", "canggih", "damai", "demokratis", "setuju", "dukung",
             "efisien", "ekspansi", "hebat", "hijau", "inovatif", "kolaborasi", "kompeten",
             "lestari", "lulus", "maju", "menang", "meningkat", "menguat", "menguntungkan",
             "peduli", "positif", "prestasi", "ramah lingkungan", "reformasi", "responsif",
             "sepakat", "solidaritas", "stabil", "sukses", "terobosan", "transparansi",
-            "transformasi", "tumbuh", "unggul"
-        ]
-
-        negative = [
-            "anjlok", "bencana", "bocor", "buruk", "defisit", "diskriminasi", "ditolak",
+            "transformasi", "tumbuh", "unggul"]
+        negative = ["anjlok", "bencana", "bocor", "buruk", "defisit", "diskriminasi", "ditolak",
             "error", "gagal", "inflasi", "lapar", "keras", "rusak", "timpang", "kalah",
             "mati", "konflik", "korupsi", "krisis", "lemah", "rosot", "miskin",
             "negatif", "parah", "cemar", "langgar", "penurunan", "pengangguran",
             "retas", "pecah", "putus", "rendah", "resesi", "terpinggirkan",
-            "tidak lulus", "tidak sah", "tidak stabil", "tidak transparan", "utang"
-        ]
-
+            "tidak lulus", "tidak sah", "tidak stabil", "tidak transparan", "utang"]
         cleaned = self.clean_news_text(text.lower())
         words = cleaned.split()
         return {
@@ -103,8 +102,23 @@ class IndonesianNewsScraper:
             "negative": [w for w in words if w in negative],
         }
 
+    def fetch_article_text(self, url):
+        """Retrieve and clean article body text from a URL."""
+        if not url:
+            return ""
+        try:
+            resp = requests.get(url, headers=self.headers, timeout=10)
+            resp.raise_for_status()
+        except Exception:
+            return ""
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        paragraphs = soup.find_all("p")
+        content = " ".join(p.get_text(" ", strip=True) for p in paragraphs)
+        return self.clean_news_text(content)
+
     def collect_all_news(self):
-        #Scrape all configured categories.
+        """Scrape all configured categories."""
         all_articles = []
         for cat in self.sources:
             articles = self.scrape_news_category(cat)
@@ -114,7 +128,7 @@ class IndonesianNewsScraper:
         return all_articles
 
     def generate_metrics(self, articles):
-        #Summarize article and sentiment counts by category.
+        """Summarize article and sentiment counts by category."""
         metrics = {}
         for cat in self.sources:
             metrics[cat] = {
