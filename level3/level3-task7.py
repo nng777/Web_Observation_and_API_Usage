@@ -318,7 +318,7 @@ class IndonesianDataPipeline:
 
 
 def main():
-    #Execute the pipeline once and display stored data.
+    #Execute the pipeline once or Schedule and display stored data.
     pipeline = IndonesianDataPipeline()
     pipeline.run_pipeline()
     pipeline.print_database_contents()
