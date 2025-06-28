@@ -3,7 +3,6 @@ import threading
 import time
 from collections import deque
 from datetime import datetime
-
 import requests
 import xml.etree.ElementTree as ET
 from tqdm.auto import tqdm
@@ -21,30 +20,31 @@ class RealTimeIndonesianDataCollector:
         self.stop_event = threading.Event()
 
     def start_data_collection(self):
-        """Start multi-threaded real-time collection."""
+        #Start real-time collection.
         weather_thread = threading.Thread(
             target=self._weather_worker, daemon=True
         )
+        #multi-threaded
         news_thread = threading.Thread(target=self._news_worker, daemon=True)
         weather_thread.start()
         news_thread.start()
         self.threads.extend([weather_thread, news_thread])
 
     def stop(self):
-        """Signal worker threads to stop and wait for them to finish."""
+        #Signal worker threads to stop and wait for them to finish.
         self.stop_event.set()
         for t in self.threads:
             t.join(timeout=0)
 
     def get_current_snapshot(self):
-        """Current data state for dashboard"""
+        #Current data state for dashboard
         return {
             "weather": list(self.data_buffer["weather"]),
             "news": list(self.data_buffer["news"]),
         }
 
     def export_dashboard_data(self):
-        """JSON format for dashboard consumption"""
+        #JSON format for dashboard consumption
         snapshot = self.get_current_snapshot()
         metrics = {
             "weather_updates": len(snapshot["weather"]),
@@ -64,8 +64,7 @@ class RealTimeIndonesianDataCollector:
             json.dump(dashboard, f, indent=2, ensure_ascii=False)
         return dashboard
 
-    # ------------------------------------------------------------------
-    # Internal workers
+    # --------------------------------internal workers----------------------------------
     def _weather_worker(self):
         while not self.stop_event.is_set():
             data = self._fetch_weather()
@@ -80,10 +79,9 @@ class RealTimeIndonesianDataCollector:
                 self.data_buffer["news"].appendleft(data)
             self.stop_event.wait(self.update_intervals["news"])
 
-    # ------------------------------------------------------------------
-    # Data fetchers
+    # ----------------------------------Data callers --------------------------------
     def _fetch_weather(self, city="Jakarta"):
-        """Fetch current weather for a given city from wttr.in"""
+        #Fetch current weather for a given city from wttr.in
         url = f"https://wttr.in/{city}?format=j1"
         try:
             resp = requests.get(url, timeout=10)
@@ -105,7 +103,7 @@ class RealTimeIndonesianDataCollector:
             }
 
     def _fetch_news(self):
-        """Fetch the latest Indonesian news headline from Google News RSS"""
+        #Fetch the latest Indonesian news headline from Google News RSS
         url = "https://news.google.com/rss?hl=id&gl=ID&ceid=ID:id"
         try:
             resp = requests.get(url, timeout=10)
