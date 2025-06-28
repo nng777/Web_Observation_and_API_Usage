@@ -4,3 +4,9 @@
 2025-06-28 15:47:52,581 [INFO] news data quality: {'records': 5, 'missing_values': 5}
 2025-06-28 15:47:52,584 [INFO] Report generated at C:\Users\nickh\PycharmProjects\Web Scraping and API for Indonesian Data\reports\report.html
 2025-06-28 15:47:52,586 [INFO] Pipeline completed successfully
+2025-06-28 15:59:15,321 [INFO] Pipeline started
+2025-06-28 15:59:21,077 [INFO] weather data quality: {'records': 3}
+2025-06-28 15:59:21,077 [INFO] economic data quality: {'records': 1, 'missing_values': 0}
+2025-06-28 15:59:21,078 [INFO] news data quality: {'records': 5, 'missing_values': 5}
+2025-06-28 15:59:21,081 [INFO] Report generated at C:\Users\nickh\PycharmProjects\Web Scraping and API for Indonesian Data\reports\report.html
+2025-06-28 15:59:21,082 [INFO] Pipeline completed successfully

@@ -2,6 +2,7 @@ import sqlite3
 import logging
 import urllib.request
 import json
+import schedule
 from datetime import datetime
 from collections import defaultdict
 from pathlib import Path
@@ -298,8 +299,12 @@ class IndonesianDataPipeline:
         except Exception as exc:
             logging.exception("Pipeline failed: %s", exc)
 
+    def schedule_daily(self, time_str="19:00"):
+        #Schedule the pipeline to run every day at the given time(UTC).
+        schedule.every().day.at(time_str).do(self.run_pipeline)
+
     def print_database_contents(self):
-        #Print stored records for quick inspection.
+        #Print db stored records.
         cur = self.conn.cursor()
         print("Weather:")
         for row in cur.execute("SELECT city, temperature, condition, humidity, collected_at FROM weather"):
@@ -317,7 +322,10 @@ def main():
     pipeline = IndonesianDataPipeline()
     pipeline.run_pipeline()
     pipeline.print_database_contents()
-
+    #pipeline.schedule_daily("06:00")
+    #while True:
+        #schedule.run_pending()
+        #time.sleep(60)
 
 if __name__ == "__main__":
     main()

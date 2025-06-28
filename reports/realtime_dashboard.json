@@ -2,31 +2,31 @@
   "data": {
     "weather": [
       {
-        "timestamp": "2025-06-28T04:29:29.428696",
+        "timestamp": "2025-06-28T08:56:12.968832",
         "city": "Jakarta",
-        "temperature_c": 25.0,
-        "description": "Haze",
-        "humidity": 100.0
+        "temperature_c": 31.0,
+        "description": "Partly cloudy",
+        "humidity": 71.0
       },
       {
-        "timestamp": "2025-06-28T04:28:58.427485",
+        "timestamp": "2025-06-28T08:55:41.918419",
         "city": "Jakarta",
-        "temperature_c": 25.0,
-        "description": "Haze",
-        "humidity": 100.0
+        "temperature_c": 31.0,
+        "description": "Partly cloudy",
+        "humidity": 71.0
       }
     ],
     "news": [
       {
-        "timestamp": "2025-06-28T04:28:57.545551",
-        "title": "KPK tangkap enam orang dalam OTT di Sumatera Utara - ANTARA News",
-        "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQb0I5ZzZPMlp0MkJtd19uWVJPNkFGRURWVmFxTzd3RThEYmtmdWVXRU8tOVB5TVYyVWJkTy15aXpzZUVZTngwM184WEFLaHo5U0poU2JaZDd4S3pBWFVWaVhNTjd6QXgtdV9wZzZEQkdDTkRQZC1iTldWMHJlQ1ZYaG94ZTltMXBhbHhKNzduNjJMdlU2dWl30gGaAUFVX3lxTE9yOUVUVVRmU0xEMFc5MnZoTWdqMWhsckVkOXQ1ZnhXTFF1aDN4aUZKb3FMSEgtMmxHeUlZcTN6V2pTb085aWJvbHpHUGpHYXE1bUhzNWlMMU02QzZPZVFhc0FXQ1Q2MGxIUXVfZUZ5czlUUDFHckNvYjd5aU54N0pvdi1qRWtxc1BDTUVya0htZU9yQ3JISy1lUXc?oc=5"
+        "timestamp": "2025-06-28T08:55:41.638079",
+        "title": "Kondisi Terkini Turis Malaysia yang Jatuh di Gunung Rinjani - detikcom",
+        "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxQbHk5QVJFY1Z4Q0Zfc19LRHhRWG1sVlo0MTJFREFyUHRFME9rTENGbnF3TFJrcmpadlloNjdyWnE5TVNZZTFsT0JqdWgxb19pTFNqQTE4cVkwMXdlYmZQSjY2eGhiVUZpc1ZfWGl2RjFPTDZuV0Y0TGp4WkdoMk44OHFxallENGFxOXA1LUVkeUFnbnlGZ1RkM18yblZ4RDVSSmsxSNIBqgFBVV95cUxNN0Jnb01INkNTRTFLZF9vLVkyUnU2QmNlTmxPQXFlS3ZZSlZqVzhsX290c2lHazdybFlxWGVxcFBjQmJxeHFpeTJyNU1SeGxwVjh3Tk9ubUhHaFZCei1jNVZNM1JBWFlnRWZidjJDMkNoLUYyOXFRekp3U01ZNTQ2alBCUzVmbjRNSnZFQXczWThmZ3FKc0lyUzhBRm9kSW9jUTlyaW5CNjN5QQ?oc=5"
       }
     ]
   },
   "metrics": {
     "weather_updates": 2,
     "news_updates": 1,
-    "avg_temperature_c": 25.0
+    "avg_temperature_c": 31.0
   }
 }
