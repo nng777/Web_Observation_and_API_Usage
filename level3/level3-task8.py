@@ -14,7 +14,7 @@ class RealTimeIndonesianDataCollector:
             "weather": deque(maxlen=100),
             "news": deque(maxlen=50),
         }
-        # shorter default intervals so a demo run quickly gathers some data
+        #shorter intervals so quickly gathers some data
         self.update_intervals = {"weather": 30, "news": 60}  # seconds
         self.threads = []
         self.stop_event = threading.Event()
@@ -103,7 +103,7 @@ class RealTimeIndonesianDataCollector:
             }
 
     def _fetch_news(self):
-        #Fetch the latest Indonesian news headline from Google News RSS
+        #Fetch the latest Indonesian news from GoogleRSS
         url = "https://news.google.com/rss?hl=id&gl=ID&ceid=ID:id"
         try:
             resp = requests.get(url, timeout=10)

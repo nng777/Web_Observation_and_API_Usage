@@ -7,7 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 try:
     from tqdm.auto import tqdm  # type: ignore
-except Exception:  # ERROR Handling/ fallback when tqdm is unavailable
+except Exception:  # ERROR Handling/ fallback when tqdm progress bar is unavailable
     class _SimpleTqdm:
         def __init__(self, total=0, desc="", unit="step"):
             self.total = total
