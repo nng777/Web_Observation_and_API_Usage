@@ -1,0 +1,32 @@
+{
+  "data": {
+    "weather": [
+      {
+        "timestamp": "2025-06-28T04:29:29.428696",
+        "city": "Jakarta",
+        "temperature_c": 25.0,
+        "description": "Haze",
+        "humidity": 100.0
+      },
+      {
+        "timestamp": "2025-06-28T04:28:58.427485",
+        "city": "Jakarta",
+        "temperature_c": 25.0,
+        "description": "Haze",
+        "humidity": 100.0
+      }
+    ],
+    "news": [
+      {
+        "timestamp": "2025-06-28T04:28:57.545551",
+        "title": "KPK tangkap enam orang dalam OTT di Sumatera Utara - ANTARA News",
+        "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQb0I5ZzZPMlp0MkJtd19uWVJPNkFGRURWVmFxTzd3RThEYmtmdWVXRU8tOVB5TVYyVWJkTy15aXpzZUVZTngwM184WEFLaHo5U0poU2JaZDd4S3pBWFVWaVhNTjd6QXgtdV9wZzZEQkdDTkRQZC1iTldWMHJlQ1ZYaG94ZTltMXBhbHhKNzduNjJMdlU2dWl30gGaAUFVX3lxTE9yOUVUVVRmU0xEMFc5MnZoTWdqMWhsckVkOXQ1ZnhXTFF1aDN4aUZKb3FMSEgtMmxHeUlZcTN6V2pTb085aWJvbHpHUGpHYXE1bUhzNWlMMU02QzZPZVFhc0FXQ1Q2MGxIUXVfZUZ5czlUUDFHckNvYjd5aU54N0pvdi1qRWtxc1BDTUVya0htZU9yQ3JISy1lUXc?oc=5"
+      }
+    ]
+  },
+  "metrics": {
+    "weather_updates": 2,
+    "news_updates": 1,
+    "avg_temperature_c": 25.0
+  }
+}
