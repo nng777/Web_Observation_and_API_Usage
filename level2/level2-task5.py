@@ -1,152 +1,88 @@
-import json
-import re
-import time
-from typing import Any, Dict, List
-
-from bs4 import BeautifulSoup
-import pandas as pd
 import requests
+import pandas as pd
+from bs4 import BeautifulSoup
+import time
 
-class IndonesianEcommerceScraper:
-    def __init__(self) -> None:
-        self.base_url = "https://www.tokopedia.com/p/"
-        self.headers = {"User-Agent": "Mozilla/5.0"}
-        self.products: List[Dict[str, Any]] = []
 
-    def close(self) -> None:
-        """Placeholder for compatibility with earlier versions."""
-        pass
+class FakeStoreHTMLScraper:
+    def __init__(self):
+        self.base_url = "https://fakestoreapi.com/products"
+        self.html_file = "fakestore_mock.html"
+        self.products = []
 
-    def _find_state_json(self, text: str) -> str | None:
-        """Return the JSON string following ``window.__STATE__=``.
-
-        The HTML contains a large JavaScript assignment like::
-
-            <script>window.__STATE__ = { ... };</script>
-
-        Because the JSON blob may contain nested braces, regular expressions
-        are unreliable.  This helper scans character by character to find the
-        matching closing brace.
-        """
-        token = "window.__STATE__"
-        idx = text.find(token)
-        if idx == -1:
-            return None
-
-        # Find the first opening brace after the token
-        start = text.find("{", idx)
-        if start == -1:
-            return None
-
-        depth = 0
-        for pos in range(start, len(text)):
-            ch = text[pos]
-            if ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    return text[start : pos + 1]
-        return None
-
-    def _extract_products(self, html: str) -> List[Dict[str, Any]]:
-        """Extract product dictionaries from the embedded JSON state."""
-        soup = BeautifulSoup(html, "html.parser")
-        # Try to locate a script containing the state assignment
-        script = soup.find("script", string=re.compile("__STATE__"))
-        text = script.get_text() if script else html
-
-        json_text = self._find_state_json(text)
-        if not json_text:
-            return []
-
+    def fetch_and_save_html(self):
+        """Fetch JSON from FakeStoreAPI and save mock HTML to file"""
         try:
-            state = json.loads(json_text)
-        except json.JSONDecodeError:
-            return []
-
-        products: List[Dict[str, Any]] = []
-
-        def _recurse(value: Any) -> None:
-            if isinstance(value, dict):
-                if value.get("__typename") == "Product" or (
-                    "name" in value and "price" in value
-                ):
-                    products.append(value)
-                for v in value.values():
-                    _recurse(v)
-            elif isinstance(value, list):
-                for item in value:
-                    _recurse(item)
-
-        _recurse(state)
-        return products
-
-    def scrape_products(self, category, max_pages=3):
-        """Scrape products: name, price, rating, seller, location"""
-        category_map = {
-            "elektronik": "handphone-tablet",
-            "fashion": "fashion-pria",
-            "makanan": "makanan-minuman",
-            "rumah-tangga": "rumah-tangga"
-        }
-
-        if category not in category_map:
-            print(f"Unknown category '{category}'")
+            response = requests.get(self.base_url, timeout=10)
+            response.raise_for_status()
+            products = response.json()
+        except Exception as e:
+            print(f"❌ Failed to fetch API: {e}")
             return
 
-        cat_slug = category_map[category]
-        for page in range(1, max_pages + 1):
-            url = f"{self.base_url}{cat_slug}?page={page}"
-            print(f"Scraping: {url}")
-            resp = requests.get(url, headers=self.headers, timeout=15)
-            if resp.status_code != 200:
-                print(f"Failed to fetch page {page}")
-                continue
+        # Simulate an HTML page
+        html = "<html><body><div class='products'>"
+        for p in products:
+            html += f"""
+            <div class='product'>
+                <h2 class='title'>{p['title']}</h2>
+                <span class='price'>{p['price']}</span>
+                <span class='category'>{p['category']}</span>
+            </div>
+            """
+        html += "</div></body></html>"
 
-            products = self._extract_products(resp.text)
-            if not products:
-                print(f"No products found on page {page}")
-                continue
+        # Save to file
+        with open(self.html_file, "w", encoding="utf-8") as f:
+            f.write(html)
 
-            for item in products:
-                self.products.append(
-                    {
-                        "name": item.get("name", "-"),
-                        "price": str(item.get("price", "-")),
-                        "rating": item.get("ratingAverage", "-"),
-                        "reviews_count": item.get("countReview", "-"),
-                        "category": category,
-                        "seller_location": item.get("shopCity", "-"),
-                    }
-                )
+        print(f"✅ Mock HTML saved to {self.html_file}")
+        time.sleep(2)
 
-            time.sleep(1)  # Be polite
+    def parse_html_and_extract(self):
+        """Use BeautifulSoup to parse the HTML and extract product info"""
+        try:
+            with open(self.html_file, "r", encoding="utf-8") as f:
+                soup = BeautifulSoup(f, "html.parser")
+        except Exception as e:
+            print(f"❌ Failed to read HTML file: {e}")
+            return
+
+        product_divs = soup.select(".product")
+
+        for div in product_divs:
+            title = div.select_one(".title").text.strip()
+            price = float(div.select_one(".price").text.strip())
+            category = div.select_one(".category").text.strip()
+            self.products.append({
+                "title": title,
+                "price": price,
+                "category": category
+            })
+
+        print(f"✅ Extracted {len(self.products)} products from HTML")
 
     def analyze_products(self):
-        df = pd.DataFrame(self.products)
-        if df.empty:
-            print("No products to analyze.")
+        if not self.products:
+            print("❌ No products to analyze.")
             return
 
-        # Convert price to numeric if possible
-        df['price_cleaned'] = df['price'].str.replace(r"[^\d]", "", regex=True).astype(float)
+        df = pd.DataFrame(self.products)
 
-        print("\n=== Average Price per Category ===")
-        print(df.groupby("category")["price_cleaned"].mean())
+        print("\n📊 Average Price per Category")
+        print(df.groupby("category")["price"].mean())
 
-        print("\n=== Top Seller Locations ===")
-        print(df["seller_location"].value_counts().head(5))
+        print("\n🛒 Sample Products")
+        print(df[["title", "price", "category"]].head(10))
 
-        print("\n=== Sample Products ===")
-        print(df[["name", "price", "seller_location"]].head(10))
+        df.to_csv("fakestore_bs_products.csv", index=False)
+        print("\n💾 Saved to fakestore_bs_products.csv")
 
         return df
 
 
 if __name__ == "__main__":
-    scraper = IndonesianEcommerceScraper()
-    scraper.scrape_products("elektronik", max_pages=2)
-    scraper.scrape_products("fashion", max_pages=2)
+    scraper = FakeStoreHTMLScraper()
+    scraper.fetch_and_save_html()
+    scraper.parse_html_and_extract()
     df = scraper.analyze_products()
-    scraper.close()

@@ -26,7 +26,9 @@
         "KOTA LANGSA",
         "KOTA LHOKSEUMAWE",
         "KOTA SUBULUSSALAM"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SUMATERA UTARA",
@@ -64,7 +66,9 @@
         "KOTA BINJAI",
         "KOTA PADANGSIDIMPUAN",
         "KOTA GUNUNGSITOLI"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SUMATERA BARAT",
@@ -88,7 +92,9 @@
         "KOTA BUKITTINGGI",
         "KOTA PAYAKUMBUH",
         "KOTA PARIAMAN"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "RIAU",
@@ -105,7 +111,9 @@
         "KABUPATEN KEPULAUAN MERANTI",
         "KOTA PEKANBARU",
         "KOTA D U M A I"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "JAMBI",
@@ -121,7 +129,9 @@
         "KABUPATEN BUNGO",
         "KOTA JAMBI",
         "KOTA SUNGAI PENUH"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SUMATERA SELATAN",
@@ -143,7 +153,9 @@
         "KOTA PRABUMULIH",
         "KOTA PAGAR ALAM",
         "KOTA LUBUKLINGGAU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "BENGKULU",
@@ -158,7 +170,9 @@
         "KABUPATEN KEPAHIANG",
         "KABUPATEN BENGKULU TENGAH",
         "KOTA BENGKULU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "LAMPUNG",
@@ -178,7 +192,9 @@
         "KABUPATEN PESISIR BARAT",
         "KOTA BANDAR LAMPUNG",
         "KOTA METRO"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KEPULAUAN BANGKA BELITUNG",
@@ -190,7 +206,9 @@
         "KABUPATEN BANGKA SELATAN",
         "KABUPATEN BELITUNG TIMUR",
         "KOTA PANGKAL PINANG"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KEPULAUAN RIAU",
@@ -202,7 +220,9 @@
         "KABUPATEN KEPULAUAN ANAMBAS",
         "KOTA B A T A M",
         "KOTA TANJUNG PINANG"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "DKI JAKARTA",
@@ -213,7 +233,9 @@
         "KOTA JAKARTA PUSAT",
         "KOTA JAKARTA BARAT",
         "KOTA JAKARTA UTARA"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "JAWA BARAT",
@@ -245,7 +267,9 @@
         "KOTA CIMAHI",
         "KOTA TASIKMALAYA",
         "KOTA BANJAR"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "JAWA TENGAH",
@@ -285,7 +309,9 @@
         "KOTA SEMARANG",
         "KOTA PEKALONGAN",
         "KOTA TEGAL"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "DI YOGYAKARTA",
@@ -295,7 +321,9 @@
         "KABUPATEN GUNUNG KIDUL",
         "KABUPATEN SLEMAN",
         "KOTA YOGYAKARTA"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "JAWA TIMUR",
@@ -338,7 +366,9 @@
         "KOTA MADIUN",
         "KOTA SURABAYA",
         "KOTA BATU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "BANTEN",
@@ -351,7 +381,9 @@
         "KOTA CILEGON",
         "KOTA SERANG",
         "KOTA TANGERANG SELATAN"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "BALI",
@@ -365,7 +397,9 @@
         "KABUPATEN KARANG ASEM",
         "KABUPATEN BULELENG",
         "KOTA DENPASAR"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "NUSA TENGGARA BARAT",
@@ -380,7 +414,9 @@
         "KABUPATEN LOMBOK UTARA",
         "KOTA MATARAM",
         "KOTA BIMA"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "NUSA TENGGARA TIMUR",
@@ -407,7 +443,9 @@
         "KABUPATEN SABU RAIJUA",
         "KABUPATEN MALAKA",
         "KOTA KUPANG"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KALIMANTAN BARAT",
@@ -426,7 +464,9 @@
         "KABUPATEN KUBU RAYA",
         "KOTA PONTIANAK",
         "KOTA SINGKAWANG"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KALIMANTAN TENGAH",
@@ -445,7 +485,9 @@
         "KABUPATEN BARITO TIMUR",
         "KABUPATEN MURUNG RAYA",
         "KOTA PALANGKA RAYA"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KALIMANTAN SELATAN",
@@ -463,7 +505,9 @@
         "KABUPATEN BALANGAN",
         "KOTA BANJARMASIN",
         "KOTA BANJAR BARU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KALIMANTAN TIMUR",
@@ -478,7 +522,9 @@
         "KOTA BALIKPAPAN",
         "KOTA SAMARINDA",
         "KOTA BONTANG"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "KALIMANTAN UTARA",
@@ -488,7 +534,9 @@
         "KABUPATEN TANA TIDUNG",
         "KABUPATEN NUNUKAN",
         "KOTA TARAKAN"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SULAWESI UTARA",
@@ -508,7 +556,9 @@
         "KOTA BITUNG",
         "KOTA TOMOHON",
         "KOTA KOTAMOBAGU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SULAWESI TENGAH",
@@ -526,7 +576,9 @@
         "KABUPATEN BANGGAI LAUT",
         "KABUPATEN MOROWALI UTARA",
         "KOTA PALU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SULAWESI SELATAN",
@@ -555,7 +607,9 @@
         "KOTA MAKASSAR",
         "KOTA PAREPARE",
         "KOTA PALOPO"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SULAWESI TENGGARA",
@@ -577,7 +631,9 @@
         "KABUPATEN BUTON SELATAN",
         "KOTA KENDARI",
         "KOTA BAUBAU"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "GORONTALO",
@@ -588,7 +644,9 @@
         "KABUPATEN BONE BOLANGO",
         "KABUPATEN GORONTALO UTARA",
         "KOTA GORONTALO"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "SULAWESI BARAT",
@@ -599,7 +657,9 @@
         "KABUPATEN MAMUJU",
         "KABUPATEN MAMUJU UTARA",
         "KABUPATEN MAMUJU TENGAH"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "MALUKU",
@@ -615,7 +675,9 @@
         "KABUPATEN BURU SELATAN",
         "KOTA AMBON",
         "KOTA TUAL"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "MALUKU UTARA",
@@ -630,7 +692,9 @@
         "KABUPATEN PULAU TALIABU",
         "KOTA TERNATE",
         "KOTA TIDORE KEPULAUAN"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "PAPUA BARAT",
@@ -648,7 +712,9 @@
         "KABUPATEN MANOKWARI SELATAN",
         "KABUPATEN PEGUNUNGAN ARFAK",
         "KOTA SORONG"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     },
     {
       "province": "PAPUA",
@@ -682,10 +748,10 @@
         "KABUPATEN INTAN JAYA",
         "KABUPATEN DEIYAI",
         "KOTA JAYAPURA"
-      ]
+      ],
+      "gdp_million_rupiah": null,
+      "inflation_yoy_percent": null
     }
   ],
-  "exchange_rate_idr_usd": 15855.4482866711,
-  "gdp_growth_percent": 5.04810577067288,
-  "inflation_yoy_percent": 3.67013142377007
+  "exchange_rate_idr_usd": 15855.4482866711
 }
