@@ -6,14 +6,47 @@ import re
 from dataclasses import dataclass
 from typing import List, Dict, Any
 
-import requests
-from bs4 import BeautifulSoup
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+try:
+    import requests
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    requests = None  # type: ignore
+
+try:
+    from bs4 import BeautifulSoup
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    BeautifulSoup = None  # type: ignore
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    plt = None  # type: ignore
+    PdfPages = None  # type: ignore
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def download_html(url: str, path: str, headers: Dict[str, str] | None = None) -> str | None:
+    """Fetch ``url`` and save the HTML content to ``path``.
+
+    Returns the path to the saved file, or ``None`` on failure.
+    """
+
+    if not requests:
+        logger.warning("Requests not available; cannot download %s", url)
+        return None
+
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(resp.text)
+        return path
+    except Exception as exc:  # pragma: no cover - network failures
+        logger.warning("Failed to download %s: %s", url, exc)
+        return None
 
 
 def clean_news_text(text: str) -> str:
@@ -133,6 +166,10 @@ def analyze_social_media_sentiment(keyword: str, max_posts: int = 20) -> Dict[st
     overall sentiment summary.
     """
 
+    if not requests:
+        logger.warning("Requests not available; cannot fetch social posts")
+        return {"posts": [], "summary": {"positive": 0, "negative": 0}}
+
     api_url = (
         "https://www.social-searcher.com/api/v2/search"
         f"?q={requests.utils.quote(keyword)}&lang=id&limit={max_posts}"
@@ -192,13 +229,20 @@ class WeatherInfo:
 def fetch_weather(city: str) -> WeatherInfo | None:
     """Fetch current weather for a city from timeanddate.com."""
 
+    if not requests or not BeautifulSoup:
+        logger.warning("Requests/BeautifulSoup not available; cannot fetch weather")
+        return None
+
     slug = city.lower().replace(" ", "-")
     url = f"https://www.timeanddate.com/weather/indonesia/{slug}"
     headers = {"User-Agent": "Mozilla/5.0"}
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+        html_file = f"data/weather_{slug}.html"
+        saved = download_html(url, html_file, headers)
+        if not saved:
+            return None
+        with open(saved, encoding="utf-8") as fh:
+            soup = BeautifulSoup(fh, "html.parser")
         qlook = soup.find("div", id="qlook")
         temp_tag = qlook.find("div", class_="h2") if qlook else None
         temperature = None
@@ -219,11 +263,18 @@ def fetch_weather(city: str) -> WeatherInfo | None:
 def fetch_upcoming_events(limit: int = 5) -> List[str]:
     """Scrape a few upcoming events from indonesia.travel."""
 
+    if not requests or not BeautifulSoup:
+        logger.warning("Requests/BeautifulSoup not available; cannot fetch events")
+        return []
+
     url = "https://indonesia.travel/events/upcoming-event.html"
     try:
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+        html_file = "data/upcoming_events.html"
+        saved = download_html(url, html_file)
+        if not saved:
+            return []
+        with open(saved, encoding="utf-8") as fh:
+            soup = BeautifulSoup(fh, "html.parser")
         cards = soup.select(".card-event")[:limit]
         return [card.get_text(" ", strip=True) for card in cards]
     except Exception as exc:
@@ -240,6 +291,10 @@ def search_hotels(
 ) -> List[str]:
     """Search the RedDoorz website for hotels and return hotel titles."""
 
+    if not requests or not BeautifulSoup:
+        logger.warning("Requests/BeautifulSoup not available; cannot fetch hotels")
+        return []
+
     url = (
         "https://www.reddoorz.co.id/id-id/list-hotels"
         f"?country=indonesia&city={city_slug}&check_in_date={check_in}"
@@ -247,9 +302,12 @@ def search_hotels(
     )
     headers = {"User-Agent": "Mozilla/5.0"}
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+        html_file = f"data/hotels_{city_slug}.html"
+        saved = download_html(url, html_file, headers)
+        if not saved:
+            return []
+        with open(saved, encoding="utf-8") as fh:
+            soup = BeautifulSoup(fh, "html.parser")
         hotels = [h.get_text(strip=True) for h in soup.select(".hotel-name")]
         return hotels
     except Exception as exc:
@@ -288,6 +346,10 @@ def create_pdf_report(
 ) -> str:
     """Generate a simple PDF report visualising tourism and sentiment data."""
 
+    if not plt or not PdfPages:
+        logger.warning("Matplotlib not available; cannot create PDF report")
+        return path
+
     os.makedirs(os.path.dirname(path), exist_ok=True)
     PdfPages(path).close()  # create/clear file if needed
     with PdfPages(path) as pdf:
@@ -314,12 +376,15 @@ def create_pdf_report(
 
 if __name__ == "__main__":
     # Example usage demonstrating all bonus features
-    sentiment = analyze_social_media_sentiment("Jakarta")
-    tourism = generate_tourism_insights(
-        city="Jakarta",
-        city_slug="cit-jakarta",
-        check_in="29-06-2025",
-        check_out="30-06-2025",
-    )
-    create_pdf_report(tourism, sentiment)
-    print("Bonus tasks completed")
+    if requests and BeautifulSoup and plt:
+        sentiment = analyze_social_media_sentiment("Jakarta")
+        tourism = generate_tourism_insights(
+            city="Jakarta",
+            city_slug="cit-jakarta",
+            check_in="29-06-2025",
+            check_out="30-06-2025",
+        )
+        create_pdf_report(tourism, sentiment)
+        print("Bonus tasks completed")
+    else:
+        print("Required dependencies are missing; bonus demo skipped")
