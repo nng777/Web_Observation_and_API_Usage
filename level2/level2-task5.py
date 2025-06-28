@@ -7,17 +7,17 @@ import time
 class FakeStoreHTMLScraper:
     def __init__(self):
         self.base_url = "https://fakestoreapi.com/products"
-        self.html_file = "fakestore_mock.html"
+        self.html_file = "data/fakestore_mock.html"
         self.products = []
 
     def fetch_and_save_html(self):
-        """Fetch JSON from FakeStoreAPI and save mock HTML to file"""
+        #Fetch JSON from FakeStoreAPI and save mock HTML to file
         try:
             response = requests.get(self.base_url, timeout=10)
             response.raise_for_status()
             products = response.json()
         except Exception as e:
-            print(f"❌ Failed to fetch API: {e}")
+            print(f" Failed to fetch API: {e}")
             return
 
         # Simulate an HTML page
@@ -36,16 +36,16 @@ class FakeStoreHTMLScraper:
         with open(self.html_file, "w", encoding="utf-8") as f:
             f.write(html)
 
-        print(f"✅ Mock HTML saved to {self.html_file}")
+        print(f" Mock HTML saved to {self.html_file}")
         time.sleep(2)
 
     def parse_html_and_extract(self):
-        """Use BeautifulSoup to parse the HTML and extract product info"""
+        #Use BeautifulSoup to parse the HTML and extract product info
         try:
             with open(self.html_file, "r", encoding="utf-8") as f:
                 soup = BeautifulSoup(f, "html.parser")
         except Exception as e:
-            print(f"❌ Failed to read HTML file: {e}")
+            print(f" Failed to read HTML file: {e}")
             return
 
         product_divs = soup.select(".product")
@@ -60,23 +60,23 @@ class FakeStoreHTMLScraper:
                 "category": category
             })
 
-        print(f"✅ Extracted {len(self.products)} products from HTML")
+        print(f" Extracted {len(self.products)} products from HTML")
 
     def analyze_products(self):
         if not self.products:
-            print("❌ No products to analyze.")
+            print(" No products to analyze.")
             return
 
         df = pd.DataFrame(self.products)
 
-        print("\n📊 Average Price per Category")
+        print("\n Average Price per Category")
         print(df.groupby("category")["price"].mean())
 
-        print("\n🛒 Sample Products")
+        print("\n Sample Products")
         print(df[["title", "price", "category"]].head(10))
 
-        df.to_csv("fakestore_bs_products.csv", index=False)
-        print("\n💾 Saved to fakestore_bs_products.csv")
+        df.to_csv("data/fakestore_bs_products.csv", index=False)
+        print("\n Saved to fakestore_bs_products.csv")
 
         return df
 

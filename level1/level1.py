@@ -30,7 +30,7 @@ class IndonesianCityAPI:
         self.headers = {"User-Agent": "Mozilla/5.0 (compatible; CityAPI/1.0)"}
 
     def get_cities_by_province_id(self, province_id):
-        """Get cities from a specific province ID"""
+        #Get cities from a specific province ID
         url = f"{self.base_url}/regencies/{province_id}.json"
         try:
             response = requests.get(url, headers=self.headers)
@@ -43,7 +43,7 @@ class IndonesianCityAPI:
             return []
 
     def search_city_by_name(self, city_name):
-        """Search city by name across all provinces (case-insensitive)"""
+        #Search city by name across all provinces (case-insensitive)
         provinces_url = f"{self.base_url}/provinces.json"
         try:
             provinces = requests.get(
@@ -76,16 +76,7 @@ class Web_Scraping:
         self.csv_path = "data/cuaca.csv"
 
     def scrape_weather_data(self, cities):
-        """Fetch weather data for given cities from wttr.in and save to CSV.
-
-        Parameters
-        ----------
-        cities : list[str]
-            A list of city names to retrieve weather for.
-        csv_path : str
-            Destination CSV file path.
-        """
-
+        #Fetch weather data for given cities from wttr.in and save to CSV.
         #csv_path = "data/cuaca.csv"
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; WeatherScraper/1.0)"
@@ -151,7 +142,7 @@ class Web_Scraping:
         return data
 
     def analyze_weather_data(self):
-        """Read weather CSV and print basic statistics."""
+        #Read weather CSV and print basic statistics.
         rows = []
         try:
             with open(self.csv_path, newline="", encoding="utf-8") as csvfile:
